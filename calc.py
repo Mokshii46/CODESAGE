@@ -1,4 +1,6 @@
-INTEGER, MUL, DIV, EOF, ADD, SUB, RPAREN, LPAREN = ('INTEGER', 'MUL', 'DIV', 'EOF', 'ADD', 'SUB', 'RPAREN', 'LPAREN')
+INTEGER, REAL_CONST, MUL, DIV, EOF, ADD, SUB, RPAREN, LPAREN = (
+    'INTEGER', 'REAL_CONST', 'MUL', 'DIV', 'EOF', 'ADD', 'SUB', 'RPAREN', 'LPAREN'
+)
 
 
 class Token(object):
@@ -7,10 +9,7 @@ class Token(object):
         self.value = value
 
     def __str__(self):
-        return 'Token({type}, {value})'.format(
-            type=self.type,
-            value=repr(self.value)
-        )
+        return f'Token({self.type}, {repr(self.value)})'
 
     def __repr__(self):
         return self.__str__()
@@ -20,28 +19,29 @@ class Lexer(object):
     def __init__(self, text):
         self.text = text
         self.pos = 0
-        self.current_char = self.text[self.pos]
+        self.current_char = self.text[self.pos] if self.text else None
 
     def error(self):
         raise Exception('Invalid character')
 
     def advance(self):
         self.pos += 1
-        if self.pos > len(self.text) - 1:
-            self.current_char = None 
-        else:
-            self.current_char = self.text[self.pos]
+        self.current_char = self.text[self.pos] if self.pos < len(self.text) else None
 
     def skip_whitespace(self):
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
 
-    def integer(self):
+    def number(self):
         result = ''
-        while self.current_char is not None and self.current_char.isdigit():
+        while self.current_char is not None and (self.current_char.isdigit() or self.current_char == '.'):
             result += self.current_char
             self.advance()
-        return int(result)
+
+        if '.' in result:
+            return Token(REAL_CONST, float(result))
+        else:
+            return Token(INTEGER, int(result))
 
     def get_next_token(self):
         while self.current_char is not None:
@@ -50,8 +50,8 @@ class Lexer(object):
                 self.skip_whitespace()
                 continue
 
-            if self.current_char.isdigit():
-                return Token(INTEGER, self.integer())
+            if self.current_char.isdigit() or self.current_char == '.':
+                return self.number()
 
             if self.current_char == '*':
                 self.advance()
@@ -60,15 +60,15 @@ class Lexer(object):
             if self.current_char == '/':
                 self.advance()
                 return Token(DIV, '/')
-            
+
             if self.current_char == '+':
                 self.advance()
                 return Token(ADD, '+')
-            
+
             if self.current_char == '-':
                 self.advance()
-                return Token(SUB, '-') 
-            
+                return Token(SUB, '-')
+
             if self.current_char == '(':
                 self.advance()
                 return Token(LPAREN, '(')
@@ -76,6 +76,8 @@ class Lexer(object):
             if self.current_char == ')':
                 self.advance()
                 return Token(RPAREN, ')')
+
+            self.error()
 
         return Token(EOF, None)
 
@@ -96,15 +98,33 @@ class Interpreter(object):
 
     def factor(self):
         token = self.current_token
+
+        if token.type == ADD:
+            self.eat(ADD)
+            return +self.factor()
+
+        if token.type == SUB:
+            self.eat(SUB)
+            return -self.factor()
+
         if token.type == INTEGER:
+            value = token.value
             self.eat(INTEGER)
-            return token.value
+            return value
+
+        if token.type == REAL_CONST:
+            value = token.value
+            self.eat(REAL_CONST)
+            return value
+
         elif token.type == LPAREN:
             self.eat(LPAREN)
             result = self.expr()
             self.eat(RPAREN)
             return result
-    
+
+        self.error()
+
     def term(self):
         result = self.factor()
 
@@ -112,13 +132,12 @@ class Interpreter(object):
             token = self.current_token
             if token.type == MUL:
                 self.eat(MUL)
-                result = result * self.factor()
+                result *= self.factor()
             elif token.type == DIV:
                 self.eat(DIV)
-                result = result / self.factor()
+                result /= self.factor()
 
         return result
-
 
     def expr(self):
         result = self.term()
@@ -128,11 +147,11 @@ class Interpreter(object):
 
             if token.type == ADD:
                 self.eat(ADD)
-                result = result + self.term()
-            
+                result += self.term()
+
             elif token.type == SUB:
                 self.eat(SUB)
-                result = result - self.term()
+                result -= self.term()
 
         return result
 
