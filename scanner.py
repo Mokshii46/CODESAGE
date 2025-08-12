@@ -17,12 +17,12 @@ class Error(Exception):
 class TokenType(Enum):
    
     DEF = auto(); IF = auto(); ELSE = auto(); ELIF = auto(); WHILE = auto()
-    FOR = auto(); IN = auto(); RETURN = auto(); TRUE = auto(); FALSE = auto(); NONE = auto(); PASS = auto()
+    FOR = auto(); IN = auto(); RETURN = auto(); TRUE = auto(); FALSE = auto(); NONE = auto(); PASS = auto(); CLASS=auto()
 
 
     IDENTIFIER = auto(); NUMBER = auto(); STRING = auto()
 
-    PLUS = auto(); MINUS = auto(); MUL = auto(); DIV = auto()
+    NOT=auto();  PLUS = auto(); MINUS = auto(); MUL = auto(); DIV = auto()
     EQ = auto(); EQEQ = auto(); NOTEQ = auto()
     LT = auto(); LTEQ = auto(); GT = auto(); GTEQ = auto()
 
@@ -37,6 +37,7 @@ class TokenType(Enum):
 
 
 KEYWORDS = {
+    'Class':TokenType.CLASS,
     'def': TokenType.DEF,
     'if': TokenType.IF,
     'else': TokenType.ELSE,
@@ -70,11 +71,24 @@ class Scanner:
         self.start = 0
         self.current = 0
         self.line = 1
+        self.indents = [0]  
+        self.dedent_pending = 0 
+
 
     def scan_tokens(self):
         while not self.is_at_end():
             self.start = self.current
-            self.scan_token()
+
+            if self.dedent_pending > 0:
+                self.tokens.append(Token(TokenType.DEDENT, '', None, self.line))
+                self.dedent_pending -= 1
+            else:
+                self.scan_token()
+           
+        while len(self.indents) > 1:
+            self.indents.pop()
+            self.tokens.append(Token(TokenType.DEDENT, '', None, self.line))
+            
         self.tokens.append(Token(TokenType.EOF, "", None, self.line))
         return self.tokens
 
@@ -86,6 +100,8 @@ class Scanner:
         elif c == '\n':
             self.tokens.append(Token(TokenType.NEWLINE, c, None, self.line))
             self.line += 1
+            self.handle_indentation()
+
         elif c == '+':
             self.add_token(TokenType.PLUS)
         elif c == '-':
@@ -188,6 +204,32 @@ class Scanner:
             return
         text = self.source[self.start:self.current]
         self.tokens.append(Token(type_, text, literal, self.line))
+    def handle_indentation(self):
+            spaces = 0
+            while not self.is_at_end():
+                c = self.peek()
+                if c == ' ':
+                    spaces += 1
+                    self.advance()
+                elif c == '\t':
+                    spaces += 4  # Assume 1 tab = 4 spaces
+                    self.advance()
+                elif c == '\n':
+                    # Skip empty line
+                    self.tokens.append(Token(TokenType.NEWLINE, '\n', None, self.line))
+                    self.line += 1
+                else:
+                    break
+
+            current_indent = self.indents[-1]
+            if spaces > current_indent:
+                self.indents.append(spaces)
+                self.tokens.append(Token(TokenType.INDENT, '', None, self.line))
+            elif spaces < current_indent:
+                while self.indents and self.indents[-1] > spaces:
+                    self.indents.pop()
+                    self.dedent_pending += 1
+
 
 
 def main():
