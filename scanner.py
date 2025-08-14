@@ -33,7 +33,7 @@ class TokenType(Enum):
     LBRACKET = auto(); RBRACKET = auto()
 
     NEWLINE = auto(); INDENT = auto(); DEDENT = auto()
-    EOF = auto()
+    EOF = auto(); PEQ = auto(); MEQ = auto();
 
 
 KEYWORDS = {
@@ -103,9 +103,15 @@ class Scanner:
             self.handle_indentation()
 
         elif c == '+':
-            self.add_token(TokenType.PLUS)
+            if self.match('='):
+                self.add_token(TokenType.PEQ)
+            else:
+                self.add_token(TokenType.PLUS)
         elif c == '-':
-            self.add_token(TokenType.MINUS)
+            if self.match('='):
+                self.add_token(TokenType.MEQ)
+            else:
+                self.add_token(TokenType.MINUS)
         elif c == '*':
             self.add_token(TokenType.MUL)
         elif c == '/':
@@ -173,6 +179,7 @@ class Scanner:
         self.advance()  # consume closing "
         value = self.source[self.start + 1: self.current - 1]
         self.add_token(TokenType.STRING, value)
+
 
     def match(self, expected):
         if self.is_at_end():
