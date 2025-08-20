@@ -14,9 +14,7 @@ def main():
 
     source_code = "\n".join(lines)
 
-    # -----------------------------
-    # 1. Scan tokens
-    # -----------------------------
+   
     scanner = Scanner(source_code)
     try:
         tokens = scanner.scan_tokens()
@@ -28,9 +26,7 @@ def main():
     for token in tokens:
         print(token)
 
-    # -----------------------------
-    # 2. Parse tokens to AST
-    # -----------------------------
+  
     parser = Parser(tokens)
     try:
         ast_list = parser.parse()  # returns a list of Expr objects
@@ -43,10 +39,7 @@ def main():
     for expr in ast_list:
         print(printer.print(expr))
 
-    # -----------------------------
-    # 3. Interpret AST
-    # -----------------------------
-    # Ensure interpreter is initialized
+
     if CODESAGE.interpreter is None:
         from interpreter import Interpreter
         CODESAGE.interpreter = Interpreter()
@@ -63,3 +56,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
