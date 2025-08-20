@@ -5,13 +5,12 @@ class ErrorCode(Enum):
     UNEXPECTED_TOKEN = 'Unexpected token'
     ID_NOT_FOUND     = 'Identifier not found'
     DUPLICATE_ID     = 'Duplicate id found'
-
+    INVALID_OPERATOR = 'Invalid Operator found'
 
 class Error(Exception):
     def __init__(self, error_code=None, token=None, message=None):
         self.error_code = error_code
         self.token = token
-        # add exception class name before the message
         self.message = f'{self.__class__.__name__}: {message}'
 
 class TokenType(Enum):
@@ -23,7 +22,8 @@ class TokenType(Enum):
     IDENTIFIER = auto(); NUMBER = auto(); STRING = auto()
 
     NOT=auto();  PLUS = auto(); MINUS = auto(); MUL = auto(); DIV = auto()
-    EQ = auto(); EQEQ = auto(); NOTEQ = auto()
+
+    PP = auto(); MM=auto(); EQEQ = auto(); NOTEQ = auto()
     LT = auto(); LTEQ = auto(); GT = auto(); GTEQ = auto()
 
     ASSIGN = auto()
@@ -33,7 +33,7 @@ class TokenType(Enum):
     LBRACKET = auto(); RBRACKET = auto()
 
     NEWLINE = auto(); INDENT = auto(); DEDENT = auto()
-    EOF = auto(); PEQ = auto(); MEQ = auto();
+    EOF = auto()
 
 
 KEYWORDS = {
@@ -103,15 +103,9 @@ class Scanner:
             self.handle_indentation()
 
         elif c == '+':
-            if self.match('='):
-                self.add_token(TokenType.PEQ)
-            else:
-                self.add_token(TokenType.PLUS)
+            self.add_token(print("Unexpected '++'. Increment operator not supported." )if self.match('+')else TokenType.PLUS)
         elif c == '-':
-            if self.match('='):
-                self.add_token(TokenType.MEQ)
-            else:
-                self.add_token(TokenType.MINUS)
+            self.add_token(print("Unexpected '--'. Decrement operator not supported.")  if self.match('-')else TokenType.MINUS)
         elif c == '*':
             self.add_token(TokenType.MUL)
         elif c == '/':
@@ -176,10 +170,9 @@ class Scanner:
         if self.is_at_end():
             print(f"[Line {self.line}] Unterminated string")
             return
-        self.advance()  # consume closing "
+        self.advance() 
         value = self.source[self.start + 1: self.current - 1]
         self.add_token(TokenType.STRING, value)
-
 
     def match(self, expected):
         if self.is_at_end():
@@ -219,10 +212,9 @@ class Scanner:
                     spaces += 1
                     self.advance()
                 elif c == '\t':
-                    spaces += 4  # Assume 1 tab = 4 spaces
+                    spaces += 4 
                     self.advance()
                 elif c == '\n':
-                    # Skip empty line
                     self.tokens.append(Token(TokenType.NEWLINE, '\n', None, self.line))
                     self.line += 1
                 else:
@@ -239,23 +231,3 @@ class Scanner:
 
 
 
-def main():
-    print("Enter Python-like code below. Press Enter twice to finish:")
-    lines = []
-    while True:
-        line = input()
-        if line == "":
-            break
-        lines.append(line)
-    
-    source_code = "\n".join(lines)
-    scanner = Scanner(source_code)
-    tokens = scanner.scan_tokens()
-    
-    print("\nScanned Tokens:")
-    for token in tokens:
-        print(token)
-
-
-if __name__ == "__main__":
-    main()
