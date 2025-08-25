@@ -1,10 +1,10 @@
 import sys
 from scanner import Scanner
 from parser import Parser, ASTTreePrinter
-from interpreter import CODESAGE
+from interpreter import CODESAGE, Interpreter
 
 def main():
-    print("Enter Python-like code below. Press Enter twice to finish:")
+    print("Enter Python code below. Press Enter twice to finish:")
     lines = []
     while True:
         line = input()
@@ -14,7 +14,9 @@ def main():
 
     source_code = "\n".join(lines)
 
-   
+    # -----------------------------
+    # 1. Scan tokens
+    # -----------------------------
     scanner = Scanner(source_code)
     try:
         tokens = scanner.scan_tokens()
@@ -26,31 +28,33 @@ def main():
     for token in tokens:
         print(token)
 
-  
+    # -----------------------------
+    # 2. Parse tokens to AST
+    # -----------------------------
     parser = Parser(tokens)
     try:
-        ast_list = parser.parse()  # returns a list of Expr objects
+        statements = parser.parse()  # returns a list of statements
     except Exception as e:
         print(f"[Parser Error] {e}", file=sys.stderr)
         sys.exit(65)
 
     print("\n[Parser Output]:")
     printer = ASTTreePrinter()
-    for expr in ast_list:
-        print(printer.print(expr))
+    for stmt in statements:
+        if stmt:
+            print(printer.print(stmt))  # Print AST for each statement
 
-
-    if CODESAGE.interpreter is None:
-        from interpreter import Interpreter
-        CODESAGE.interpreter = Interpreter()
-
-    for expr in ast_list:
-        CODESAGE.interpret(expr)
-
-    # Exit codes based on errors
-    if CODESAGE.had_error:
-        sys.exit(65)
-    if CODESAGE.had_runtime_error:
+    # -----------------------------
+    # 3. Interpret AST
+    # -----------------------------
+    interpreter = Interpreter()
+    CODESAGE.interpreter = interpreter
+    try:
+        # Filter out None statements (from errors) and run interpreter
+        statements = [stmt for stmt in statements if stmt is not None]
+        CODESAGE.interpret(statements)
+    except Exception as e:
+        print(f"[Runtime Error] {e}", file=sys.stderr)
         sys.exit(70)
 
 
