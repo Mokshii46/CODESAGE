@@ -16,10 +16,13 @@ class Error(Exception):
 class TokenType(Enum):
    
     DEF = auto(); IF = auto(); ELSE = auto(); ELIF = auto(); WHILE = auto()
-    FOR = auto(); IN = auto(); RETURN = auto(); TRUE = auto(); FALSE = auto(); NONE = auto(); PASS = auto(); CLASS=auto()
+    FOR = auto(); IN = auto(); RETURN = auto(); TRUE = auto(); FALSE = auto(); NONE = auto(); PASS = auto(); CLASS=auto();PRINT=auto()
 
 
     IDENTIFIER = auto(); NUMBER = auto(); STRING = auto()
+
+    AND=auto()
+    OR=auto()
 
     NOT=auto();  PLUS = auto(); MINUS = auto(); MUL = auto(); DIV = auto()
 
@@ -35,8 +38,16 @@ class TokenType(Enum):
     NEWLINE = auto(); INDENT = auto(); DEDENT = auto()
     EOF = auto()
 
+    TRUE=auto()
+    FALSE=auto()
+
 
 KEYWORDS = {
+    'True':TokenType.TRUE,
+    'False':TokenType.FALSE,
+    'or':TokenType.OR,
+    'and':TokenType.AND,
+    'print':TokenType.PRINT,
     'Class':TokenType.CLASS,
     'def': TokenType.DEF,
     'if': TokenType.IF,
@@ -150,8 +161,13 @@ class Scanner:
             self.advance()
         text = self.source[self.start:self.current]
         type_ = KEYWORDS.get(text, TokenType.IDENTIFIER)
-        self.add_token(type_)
-
+        if text == "True":
+            self.add_token(TokenType.TRUE, True)
+        elif text == "False":
+            self.add_token(TokenType.FALSE, False)
+        else:
+            self.add_token(type_)
+    
     def number(self):
         while self.peek().isdigit():
             self.advance()
