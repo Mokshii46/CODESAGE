@@ -10,6 +10,10 @@ class StmtVisitor:
     def visitVarStmt(self, stmt): pass
     def visitBlockStmt(self, stmt): pass
     def visitIfStmt(self, stmt): pass
+    def visitWhileStmt(self, stmt): pass
+    def visitForStmt(self,stmt): pass
+    def visitBreakStmt(self,stmt):pass
+    def visitContinueStmt(self,stmt):pass
 
 
 class Stmt:
@@ -47,6 +51,32 @@ class Stmt:
 
         def accept(self, visitor: StmtVisitor):
             return visitor.visitIfStmt(self)
+        
+    class While:
+        def __init__(self, condition, body):
+            self.condition = condition 
+            self.body = body          
+
+        def accept(self, visitor:StmtVisitor):
+            return visitor.visitWhileStmt(self)
+        
+    class For:
+        def __init__(self, name, iterable, body):
+            self.name = name
+            self.iterable = iterable
+            self.body = body
+
+        def accept(self, visitor:StmtVisitor):
+            return visitor.visitForStmt(self)
+    class Break:
+        def accept(self, visitor:StmtVisitor):
+            return visitor.visitBreakStmt(self)
+        
+    class Continue:
+        def accept(self, visitor:StmtVisitor):
+            return visitor.visitContinueStmt(self)
+
+
 
 
 class ExprVisitor:
@@ -57,6 +87,11 @@ class ExprVisitor:
     def visitVariableExpr(self, expr): pass
     def visitAssignExpr(self, expr): pass
     def visitLogicalExpr(self, expr): pass
+    def visitListLiteral(self, expr): pass
+    def visitIndexExpr(self, expr): pass
+    def visitIndexAssignExpr(self, expr): pass
+    def visitLenExpr(self, expr): pass
+
 
 class Expr:
     class Binary:
@@ -107,8 +142,42 @@ class Expr:
 
         def accept(self, visitor:ExprVisitor):
             return visitor.visitLogicalExpr(self)
+        
+    class ListLiteral:
+        def __init__(self, elements):
+            self.elements = elements
+        def accept(self, visitor: ExprVisitor):
+            return visitor.visitListLiteral(self)
+
+    class Index:
+        def __init__(self, collection, index_expr):
+            self.collection = collection
+            self.index_expr = index_expr
+        def accept(self, visitor: ExprVisitor):
+            return visitor.visitIndexExpr(self)
+
+    class IndexAssign:
+        def __init__(self, collection, index_expr, value_expr):
+            self.collection = collection
+            self.index_expr = index_expr
+            self.value_expr = value_expr
+        def accept(self, visitor: ExprVisitor):
+            return visitor.visitIndexAssignExpr(self)
+    
+    class Range:
+        def __init__(self, args):
+            self.args = args  # list[Expr]
+        def accept(self, visitor: ExprVisitor):
+            return visitor.visitRangeExpr(self)
+
+    class Len:
+        def __init__(self, target):
+            self.target = target  # Expr
+        def accept(self, visitor: ExprVisitor):
+            return visitor.visitLenExpr(self)
 
         
+
     
 
 class ASTTreePrinter(ExprVisitor, StmtVisitor):
@@ -163,6 +232,57 @@ class ASTTreePrinter(ExprVisitor, StmtVisitor):
         s += expr.right.accept(self)
         self.indent -= 1
         return s
+    
+    def visitListLiteral(self, expr):
+        s = self._pad("ListLiteral(")
+        self.indent += 1
+        if not expr.elements:
+            s += self._pad("<empty>")
+        else:
+            for el in expr.elements:
+                s += el.accept(self)
+        self.indent -= 1
+        s += self._pad(")")
+        return s
+
+    def visitIndexExpr(self, expr):
+        s = self._pad("IndexExpr(")
+        self.indent += 1
+        s += expr.collection.accept(self)   # Correct name
+        s += expr.index_expr.accept(self)   # Correct name
+        self.indent -= 1
+        s += self._pad(")")
+        return s
+    
+    def visitIndexAssignExpr(self, expr):
+        s = self._pad("IndexAssign(")
+        self.indent += 1
+        s += expr.collection.accept(self)
+        s += expr.index_expr.accept(self)
+        s += expr.value_expr.accept(self)
+        self.indent -= 1
+        s += self._pad(")")
+        return s
+    
+    def visitRangeExpr(self, expr):
+        s = self._pad("Range(")
+        self.indent += 1
+        for a in expr.args:
+            s += a.accept(self)
+        self.indent -= 1
+        s += self._pad(")")
+        return s
+
+    def visitLenExpr(self, expr):
+        s = self._pad("Len(")
+        self.indent += 1
+        s += expr.target.accept(self)
+        self.indent -= 1
+        s += self._pad(")")
+        return s
+
+
+
 
 
     # ----------------- Stmt Visitors -----------------
@@ -237,6 +357,58 @@ class ASTTreePrinter(ExprVisitor, StmtVisitor):
         self.indent -= 1
         s += self._pad(")")
         return s
+    
+    def visitWhileStmt(self, stmt):
+        s = self._pad("WhileStmt(")
+        self.indent += 1
+
+        s += self._pad("Condition:")
+        self.indent += 1
+        s += stmt.condition.accept(self)
+        self.indent -= 1
+
+        s += self._pad("Body:")
+        self.indent += 1
+        s += stmt.body.accept(self)
+        self.indent -= 1
+
+        s += self._pad(")")
+        return s
+
+    def visitForStmt(self, stmt):
+        s = self._pad("ForStmt(")
+        self.indent += 1
+
+        # Loop Variable
+        s += self._pad("Variable:")
+        self.indent += 1
+        s += self._pad(stmt.name.lexeme)
+        self.indent -= 1
+
+        # Iterable Expression
+        s += self._pad("Iterable:")
+        self.indent += 1
+        s += stmt.iterable.accept(self)
+        self.indent -= 1
+
+        # Body
+        s += self._pad("Body:")
+        self.indent += 1
+        s += stmt.body.accept(self)
+        self.indent -= 1
+
+        self.indent -= 1
+        s += self._pad(")")
+        return s
+
+    def visitBreakStmt(self, stmt):
+        s=self._pad("BreakSTmt()")
+        return s
+    
+    def visitContinueStmt(self, stmt):
+        s=self._pad("ContinueStmt()")
+        return s
+    
 
 
 
@@ -271,15 +443,25 @@ class Parser:
 
     # ----------------- Statements -----------------
     def statement(self):
-        if self.match(TokenType.WHILE):
-            return self.while_statement()
-        if self.match(TokenType.IF):
-            return self.if_statement()
         if self.match(TokenType.PRINT):
-            return self.print_statement()
-        if self.match(TokenType.INDENT):
-            return Stmt.Block(self.block())
-        return self.expression_statement()
+            stmt = self.print_statement()
+        elif self.match(TokenType.IF):
+            stmt = self.if_statement()
+        elif self.match(TokenType.WHILE):
+            stmt = self.while_statement()
+        elif self.match(TokenType.FOR):
+            stmt = self.for_statement()
+        elif self.match(TokenType.BREAK):
+            stmt =self.break_statement()
+        elif self.match(TokenType.CONTINUE):
+            stmt=self.continue_statement()
+        elif self.match(TokenType.LBRACE):
+            stmt = Stmt.Block(self.block())
+        else:
+            stmt = self.expression_statement()  
+
+        return stmt
+
 
     def if_statement(self):
         condition = self.expression()
@@ -314,7 +496,72 @@ class Parser:
         else:
             return self.statement()
 
-        
+    def while_statement(self):
+        condition = self.expression()
+        self.consume(TokenType.COLON, "Expect ':' after while condition.")
+        self.consume(TokenType.NEWLINE, "Expect newline after ':'.")
+
+        body = Stmt.Block(self.block())
+        return Stmt.While(condition, body)
+    
+
+    def for_statement(self):
+        name = self.consume(TokenType.IDENTIFIER, "Expect loop variable after 'for'.")
+        self.consume(TokenType.IN, "Expect 'in' after loop variable.")
+
+        if self.check(TokenType.RANGE):
+            self.advance()
+            iterable = self.parse_range_expr()
+        elif self.check(TokenType.LEN):
+            self.advance()
+            iterable = self.parse_len_expr()
+        else:
+            iterable = self.expression()
+
+        self.consume(TokenType.COLON, "Expect ':' after iterable in for loop.")
+        body = self.suite()
+        return Stmt.For(name, iterable, body)
+
+    def break_statement(self):
+        if self.match(TokenType.COLON):
+            raise self.error(self.previous(), "Unexpected ':' after 'break'.")
+        self.match(TokenType.NEWLINE) 
+        return Stmt.Break()
+
+    def continue_statement(self):
+        if self.match(TokenType.COLON):
+            raise self.error(self.previous(), "Unexpected ':' after 'continue'.")
+        self.match(TokenType.NEWLINE) 
+        return Stmt.Continue()
+
+
+   
+    def parse_range_expr(self):
+        args = []
+        if self.match(TokenType.LPAREN):
+            if not self.check(TokenType.RPAREN):
+                args.append(self.expression())
+                while self.match(TokenType.COMMA):
+                    args.append(self.expression())
+            self.consume(TokenType.RPAREN, "Expect ')' after range arguments.")
+        else:
+            args.append(self.expression())
+            while self.match(TokenType.COMMA):
+                args.append(self.expression())
+        if not (1 <= len(args) <= 3):
+            raise self.error(self.previous(), "range() takes 1 to 3 arguments.")
+        return Expr.Range(args)
+
+    def parse_len_expr(self):
+        if self.match(TokenType.LPAREN):
+            target = self.expression()
+            self.consume(TokenType.RPAREN, "Expect ')' after len argument.")
+        else:
+            target = self.expression()
+        return Expr.Len(target)
+
+
+   
 
 
     def print_statement(self):
@@ -324,27 +571,21 @@ class Parser:
             self.consume(TokenType.RPAREN, "Expect ')' after print value.")
         else:
             value = self.expression()
-        # Accept newline
         self.match(TokenType.NEWLINE)
         return Stmt.Print(value)
 
     def expression_statement(self):
         expr = self.expression()
-        if isinstance(expr, Expr.Assign):
-            stmt = Stmt.Var(expr.name, expr.value)
-        else:
-            stmt = Stmt.Expression(expr)
-
-        # Consume NEWLINE if present
+        stmt = Stmt.Expression(expr)
         if self.match(TokenType.NEWLINE):
             return stmt
-
-        # Consume EOF if it's next
-        if self.is_at_end():
-            self.advance()  # move past EOF so main loop finishes correctly
+        if self.check(TokenType.DEDENT):
             return stmt
-
+        if self.is_at_end():
+            self.advance()
+            return stmt
         self.error(self.peek(), "Expect end of statement (newline or EOF).")
+
 
 
     # ----------------- Expressions -----------------
@@ -380,6 +621,8 @@ class Parser:
             value = self.assignment()
             if isinstance(expr, Expr.Variable):
                 return Expr.Assign(expr.name, value)
+            elif isinstance(expr, Expr.Index):
+                return Expr.IndexAssign(expr.collection, expr.index_expr, value)
             else:
                 raise ParseError(f"[line {operator.line}] Invalid assignment target.")
         return expr
@@ -410,7 +653,7 @@ class Parser:
 
     def factor(self):
         expr = self.unary()
-        while self.match(TokenType.DIV, TokenType.MUL):
+        while self.match(TokenType.DIV, TokenType.MUL,TokenType.REM):
             operator = self.previous()
             right = self.unary()
             expr = Expr.Binary(expr, operator, right)
@@ -422,20 +665,62 @@ class Parser:
             right = self.unary()
             return Expr.Unary(operator, right)
         return self.primary()
+    
+    def list_literal(self):
+        elements = []
+        if not self.check(TokenType.RBRACKET):
+            while True:
+                elements.append(self.expression())
+                # if comma, consume and parse next element
+                if self.match(TokenType.COMMA):
+                    if self.check(TokenType.RBRACKET):
+                        break
+                    continue
+                else:
+                    break
+        self.consume(TokenType.RBRACKET, "Expect ']' after list elements.")
+        return Expr.ListLiteral(elements)
+
 
     def primary(self):
-        if self.match(TokenType.FALSE): return Expr.Literal(False)
-        if self.match(TokenType.TRUE): return Expr.Literal(True)
-        if self.match(TokenType.NONE): return Expr.Literal(None)
+        if self.match(TokenType.FALSE):
+            return Expr.Literal(False)
+        if self.match(TokenType.TRUE):
+            return Expr.Literal(True)
+        if self.match(TokenType.NONE):
+            return Expr.Literal(None)
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Expr.Literal(self.previous().literal)
         if self.match(TokenType.LPAREN):
             expr = self.expression()
             self.consume(TokenType.RPAREN, "Expect ')' after expression.")
-            return Expr.Grouping(expr)
-        if self.match(TokenType.IDENTIFIER):
-            return Expr.Variable(self.previous())
-        raise ParseError(f"[line {self.peek().line}] Error at '{self.peek().lexeme}': Expect expression.")
+            primary_expr = Expr.Grouping(expr)
+        elif self.match(TokenType.LBRACKET):
+            # delegate to list_literal() to parse elements
+            primary_expr = self.list_literal()
+        elif self.match(TokenType.IDENTIFIER):
+            primary_expr = Expr.Variable(self.previous())
+        elif self.match(TokenType.RANGE):
+            primary_expr=self.parse_range_expr()
+            return primary_expr
+        elif self.match(TokenType.LEN):
+            primary_expr=self.parse_len_expr()
+            return primary_expr
+        
+        else:
+            raise ParseError(f"[line {self.peek().line}] Error at '{self.peek().lexeme}': Expect expression.")
+
+        # --- Indexing support ---
+        while True:
+            if self.match(TokenType.LBRACKET):
+                index_expr = self.expression()
+                self.consume(TokenType.RBRACKET, "Expect ']' after index expression.")
+                primary_expr = Expr.Index(primary_expr, index_expr)
+                continue
+            break
+
+        return primary_expr
+
 
     # ----------------- Helpers -----------------
     def match(self, *types):
@@ -482,9 +767,10 @@ class Parser:
 
     def block(self):
         statements = []
+        self.consume(TokenType.INDENT, "Expect indent after ':'.")
+
         while not self.check(TokenType.DEDENT) and not self.is_at_end():
-            stmt = self.declaration()
-            if stmt:
-                statements.append(stmt)
-        self.consume(TokenType.DEDENT, "Expect block to end (DEDENT).")
+            statements.append(self.declaration())
+
+        self.consume(TokenType.DEDENT, "Expect dedent after block.")
         return statements
