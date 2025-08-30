@@ -5,8 +5,12 @@ from scanner import TokenType
 class RuntimeError(Exception):
     def __init__(self, token, message):
         super().__init__(message)   
-        self.token = token    
+        self.token = token 
 
+class BreakException(Exception):
+    pass
+class ContinueException(Exception):
+    pass
 class CODESAGE:
     had_error = False
     had_runtime_error = False
@@ -82,7 +86,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
         value = None
         if stmt.initializer:
             value = self.evaluate(stmt.initializer)
-        self.environment.define(stmt.name.lexeme, value)
+        if stmt.name.lexeme not in self.environment.values:
+            self.environment.define(stmt.name.lexeme, value)
+        else:
+            self.environment.assign(stmt.name, value)
         return None
 
     def visitBlockStmt(self, stmt):
@@ -106,6 +113,104 @@ class Interpreter(ExprVisitor, StmtVisitor):
             self.execute(stmt.else_branch)
 
         return None
+
+    def visitWhileStmt(self, stmt):
+        iteration = 0
+        while self.is_truthy(self.evaluate(stmt.condition)):
+            try:
+                self.execute(stmt.body) 
+            except BreakException:
+                break  
+            except ContinueException:
+                continue  
+
+            iteration += 1
+            if iteration > 50: 
+                print("[DEBUG] Breaking possible infinite loop.")
+                break
+
+        
+    
+    def visitListLiteral(self, expr):
+        return [self.evaluate(e) for e in expr.elements]
+
+    def visitIndexExpr(self, expr):
+        collection = self.evaluate(expr.collection)
+        index = self.evaluate(expr.index_expr)  # FIXED: index_expr
+        if not isinstance(collection, list):
+            raise RuntimeError(expr.collection, "Indexing only supported on lists.")
+        if not isinstance(index, (int, float)):
+            raise RuntimeError("List index must be a number.")
+        index = int(index)
+        if index < 0 or index >= len(collection):
+            raise RuntimeError(expr.index_expr, "List index out of range.")
+        return collection[index]
+
+    def visitIndexAssignExpr(self, expr):
+        collection = self.evaluate(expr.collection)
+        index = self.evaluate(expr.index_expr)
+        value = self.evaluate(expr.value_expr)  # FIXED: value_expr
+
+        if not isinstance(collection, list):
+            raise RuntimeError(expr.collection, "Index assignment only supported on lists.")
+        if not isinstance(index, (int, float)):
+            raise RuntimeError("List index must be a number.")
+        index = int(index)
+        if index < 0 or index >= len(collection):
+            raise RuntimeError(expr.index_expr, "List index out of range.")
+
+        collection[index] = value
+        return value
+    
+    # --- in Interpreter ---
+    def visitRangeExpr(self, expr):
+        args = [self.evaluate(a) for a in expr.args]
+        # coerce numbers to int
+        ints = []
+        for a in args:
+            if isinstance(a, (int, float, bool)):
+                ints.append(int(a))
+            else:
+                raise RuntimeError(None, "range() arguments must be numbers.")
+        if len(ints) == 1:  return range(ints[0])
+        if len(ints) == 2:  return range(ints[0], ints[1])
+        if len(ints) == 3:  return range(ints[0], ints[1], ints[2])
+        raise RuntimeError(None, "range() takes 1 to 3 arguments.")
+
+    def visitLenExpr(self, expr):
+        target = self.evaluate(expr.target)
+        try:
+            return len(target)
+        except Exception:
+            raise RuntimeError(None, "object has no len().")
+
+
+    def visitForStmt(self, stmt):
+        iterable_value = self.evaluate(stmt.iterable)
+        if isinstance(iterable_value, (int, float, bool)):
+            iterable_value = range(int(iterable_value))
+
+        if not hasattr(iterable_value, "__iter__"):
+            raise RuntimeError(stmt.name, "Object is not iterable.")
+        
+        for v in iterable_value:
+            self.environment.assign(stmt.name, v)
+            try:
+                self.execute(stmt.body)
+            except BreakException:
+                break
+            except ContinueException:
+                continue
+        
+        return None
+
+    def visitBreakStmt(self, stmt):
+        raise BreakException()
+    
+    def visitContinueStmt(self, stmt):
+        raise ContinueException()
+
+
 
 
 
@@ -160,6 +265,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
             if right == 0:
                 raise RuntimeError(expr.operator, "Division by zero.")
             return float(left) / float(right)
+        if op == TokenType.REM:
+            self.check_number_operands(expr.operator, left, right)
+            return float(left) % float(right)
+
 
         if op == TokenType.GT:
             self.check_number_operands(expr.operator, left, right)
@@ -195,7 +304,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if expr.operator.type == TokenType.OR:
             if self.is_truthy(left):
                 return left
-        else: 
+        else:  # AND
             if not self.is_truthy(left):
                 return left
 
