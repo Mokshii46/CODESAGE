@@ -16,19 +16,19 @@ class Error(Exception):
 class TokenType(Enum):
    
     DEF = auto(); IF = auto(); ELSE = auto(); ELIF = auto(); WHILE = auto()
-    FOR = auto(); IN = auto(); RETURN = auto(); TRUE = auto(); FALSE = auto(); NONE = auto(); PASS = auto(); CLASS=auto();PRINT=auto()
-
+    FOR = auto(); IN = auto(); RETURN = auto(); TRUE = auto(); FALSE = auto(); NONE = auto(); PASS = auto(); CLASS=auto();PRINT=auto();RANGE=auto();LEN=auto()
+    BREAK=auto(); CONTINUE=auto()
 
     IDENTIFIER = auto(); NUMBER = auto(); STRING = auto()
 
     AND=auto()
     OR=auto()
 
-    NOT=auto();  PLUS = auto(); MINUS = auto(); MUL = auto(); DIV = auto()
+    NOT=auto();  PLUS = auto(); MINUS = auto(); MUL = auto(); DIV = auto();REM=auto()
 
     PP = auto(); MM=auto(); EQEQ = auto(); NOTEQ = auto()
     LT = auto(); LTEQ = auto(); GT = auto(); GTEQ = auto()
-
+    PE=auto();SE=auto();DE=auto();ME=auto()
     ASSIGN = auto()
     COLON = auto(); COMMA = auto(); DOT = auto()
     LPAREN = auto(); RPAREN = auto()
@@ -38,13 +38,12 @@ class TokenType(Enum):
     NEWLINE = auto(); INDENT = auto(); DEDENT = auto()
     EOF = auto()
 
-    TRUE=auto()
-    FALSE=auto()
-
 
 KEYWORDS = {
-    'True':TokenType.TRUE,
-    'False':TokenType.FALSE,
+    'continue':TokenType.CONTINUE,
+    'break':TokenType.BREAK,
+    'range':TokenType.RANGE,
+    'len':TokenType.LEN,
     'or':TokenType.OR,
     'and':TokenType.AND,
     'print':TokenType.PRINT,
@@ -62,7 +61,6 @@ KEYWORDS = {
     'None': TokenType.NONE,
     'pass': TokenType.PASS,
 }
-
 
 class Token:
     def __init__(self, type_, lexeme, literal, line):
@@ -114,13 +112,15 @@ class Scanner:
             self.handle_indentation()
 
         elif c == '+':
-            self.add_token(print("Unexpected '++'. Increment operator not supported." )if self.match('+')else TokenType.PLUS)
+            self.add_token(TokenType.PE if self.match('=')else TokenType.PLUS)
         elif c == '-':
-            self.add_token(print("Unexpected '--'. Decrement operator not supported.")  if self.match('-')else TokenType.MINUS)
+            self.add_token(TokenType.SE if self.match('=')else TokenType.MINUS)
         elif c == '*':
-            self.add_token(TokenType.MUL)
+            self.add_token(TokenType.ME if self.match('=')else TokenType.MUL)
         elif c == '/':
-            self.add_token(TokenType.DIV)
+            self.add_token(TokenType.DE if self.match('=')else TokenType.DIV)
+        elif c== '%':
+            self.add_token(TokenType.REM)
         elif c == '=':
             self.add_token(TokenType.EQEQ if self.match('=') else TokenType.ASSIGN)
         elif c == '!':
@@ -221,29 +221,24 @@ class Scanner:
         text = self.source[self.start:self.current]
         self.tokens.append(Token(type_, text, literal, self.line))
     def handle_indentation(self):
-            spaces = 0
-            while not self.is_at_end():
-                c = self.peek()
-                if c == ' ':
-                    spaces += 1
-                    self.advance()
-                elif c == '\t':
-                    spaces += 4 
-                    self.advance()
-                elif c == '\n':
-                    self.tokens.append(Token(TokenType.NEWLINE, '\n', None, self.line))
-                    self.line += 1
-                else:
-                    break
+        spaces = 0
+        while not self.is_at_end():
+            c = self.peek()
+            if c == ' ':
+                spaces += 1
+                self.advance()
+            elif c == '\t':
+                spaces += 4
+                self.advance()
+            else:
+                break
 
-            current_indent = self.indents[-1]
-            if spaces > current_indent:
-                self.indents.append(spaces)
-                self.tokens.append(Token(TokenType.INDENT, '', None, self.line))
-            elif spaces < current_indent:
-                while self.indents and self.indents[-1] > spaces:
-                    self.indents.pop()
-                    self.dedent_pending += 1
+        current_indent = self.indents[-1]
 
-
-
+        if spaces > current_indent:
+            self.indents.append(spaces)
+            self.tokens.append(Token(TokenType.INDENT, '', None, self.line))
+        elif spaces < current_indent:
+            while self.indents and self.indents[-1] > spaces:
+                self.indents.pop()
+                self.tokens.append(Token(TokenType.DEDENT, '', None, self.line))
