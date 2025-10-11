@@ -1,0 +1,110 @@
+
+site_name: CodeSage
+site_description: 'Official documentation for the CS Project.'
+site_author: 'Mokshi Shah'
+# Change this to the final URL of your documentation site
+# site_url: 'https://your-username.github.io/your-repo-name/'
+
+# # ==============================================================================
+# # Repository
+# # ==============================================================================
+# # Link to your project's repository (e.g., on GitHub)
+# repo_name: 'your-username/your-repo-name'
+# repo_url: 'https://github.com/your-username/your-repo-name'
+# # The 'edit' link will appear on each page, allowing for easy contributions.
+# edit_uri: 'edit/main/docs/'
+
+# ==============================================================================
+# Theme Configuration
+# ==============================================================================
+theme:
+  name: material
+  language: en
+  # You can add a logo and favicon if you have them in an 'assets' folder
+  # logo: assets/logo.png
+  # favicon: assets/favicon.ico
+
+  # Features for a better user experience
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+    - toc.follow
+
+  # Color palette - includes a light/dark mode toggle
+  palette:
+    # Light mode
+    - scheme: default
+      primary: 'indigo'
+      accent: 'indigo'
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: 'black'
+      accent: 'indigo'
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+# ==============================================================================
+# Navigation Menu
+# ==============================================================================
+# This defines the structure of your site's navigation sidebar.
+# The structure is based on the table of contents you provided.
+nav:
+  - 'Introduction': 'index.md'
+  - 'System Design and Architecture':
+    - 'System Overview': 'System_overview.md'
+    # NOTE: Your table of contents mentions an 'Architecture Diagram',
+    # but a corresponding file was not found. You can add it here
+    # once you create 'architecture.md'.
+    # - 'Architecture Diagram': 'architecture.md'
+    - 'Module Description':
+      - 'Scanner': 'scanner.md'
+      - 'Parser': 'parser.md'
+      - 'AST Summarizer': 'ASTSummarizer.md'
+      - 'Interpreter': 'interpreter.md'
+      - 'GUI': 'GUI.md'
+  - 'Results': 'results.md'
+  - 'Problems Faced': 'problemsfaced.md'
+  - 'Future Prospects': 'futureprospects.md'
+  - 'References': 'references.md'
+
+# ==============================================================================
+# Markdown Extensions
+# ==============================================================================
+# These extensions add more features to the standard Markdown syntax.
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.details
+  - pymdownx.tabbed
+  - pymdownx.emoji
+  - pymdownx.tasklist
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
