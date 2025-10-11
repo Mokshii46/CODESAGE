@@ -13,7 +13,7 @@ from openai import OpenAI
 # import os
 from openai import OpenAI
 
-client = OpenAI(api_key="APIKEY")
+# client = OpenAI(api_key="APIKEY")
 
 def gpt_line_by_line_summary(code: str) -> str:
     messages = [

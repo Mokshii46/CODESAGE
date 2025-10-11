@@ -5,7 +5,7 @@ from openai import OpenAI
 # -----------------------------
 # 1. Initialize OpenAI client
 # -----------------------------
-client = OpenAI(api_key="APIKEY")  # put your key here or load from env
+# client = OpenAI(api_key="APIKEY")  # put your key here or load from env
 
 def summarize_code(code_snippet: str) -> str:
     """Send code snippet to GPT and return summary."""
