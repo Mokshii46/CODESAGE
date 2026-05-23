@@ -1,83 +1,102 @@
 # CodeSage — AI-Powered Code Interpreter & Explainer
 
-For full documentation-->[https://Mokshii46.github.io/CODESAGE/]
-**CodeSage** is a Python-based framework that combines **compiler principles**, **tree-walk interpretation**, and **AI-based summarization** to not only execute code but also explain it in human-readable form.  
-It is designed to help developers, students, and educators **understand code behavior and structure**.
+> A Python framework combining compiler principles, tree-walk interpretation, and AI-based summarization to execute and explain code in plain English.
+
+📄 **[Full Documentation →](https://Mokshii46.github.io/CODESAGE/)**
+
+![Python](https://img.shields.io/badge/Python-3.x-blue?style=flat-square&logo=python)
+![NLP](https://img.shields.io/badge/NLP-Rule--based-purple?style=flat-square)
+![AST](https://img.shields.io/badge/AST-Tree--Walk-green?style=flat-square)
+![GUI](https://img.shields.io/badge/GUI-Tkinter-orange?style=flat-square)
 
 ---
 
-##  Pipeline Overview
+## What is CodeSage?
 
-CodeSage processes code through several well-defined stages:
-
-1. **Scanner / Lexer**  
-   - Reads raw source code character by character.  
-   - Converts it into **tokens** (keywords, operators, literals, identifiers).  
-   - Detects lexical errors (unrecognized symbols, missing delimiters).  
-
-2. **Parser**  
-   - Applies a **recursive descent parser** to transform tokens into an **Abstract Syntax Tree (AST)**.  
-   - The AST represents the **logical and hierarchical structure** of the code.  
-   - Detects syntax errors and provides meaningful error messages.  
-
-3. **AST Summarizer**  
-   - Traverses the AST to create **structured summaries** of code behavior.  
-   - Converts programming constructs (loops, conditionals, assignments) into readable explanations.  
-
-4. **Interpreter (Tree-Walk Execution)**  
-   - Executes the AST recursively.  
-   - Evaluates expressions, executes statements, handles loops, functions, and conditionals.  
-   - Provides runtime output, including results of calculations and print statements.  
-
-5. **NLP Integration (Optional)**  
-   - Takes the AST summaries and refines them using **natural language models**.  
-   - Produces **human-like explanations** of the code’s logic.  
-
-6. **GUI / IDE**  
-   - Built with Tkinter, the interface integrates:  
-     - Code editor  
-     - Output console  
-     - AST visualization  
-     - Summaries and explanations  
+**CodeSage** helps developers, students, and educators **understand code behavior and structure** — not just run it. It parses Python code into an Abstract Syntax Tree, walks it to produce structured summaries, and optionally refines them into natural language explanations.
 
 ---
 
-## Results
-
-CodeSage can handle a variety of Python constructs:
-
-- Variable declarations and assignments  
-- Arithmetic and logical operations  
-- Loops (`for`, `while`) and conditionals (`if`, `elif`, `else`)  
-- Functions, return statements, and built-in utilities (`len`, `range`)  
-- Lists and index-based operations  
-
-Example snippet:
+## Pipeline Overview
 
 ```
+Source Code
+    │
+    ▼
+┌─────────────┐
+│   Scanner   │  →  Tokenizes raw source (keywords, operators, literals)
+└─────────────┘
+    │
+    ▼
+┌─────────────┐
+│   Parser    │  →  Recursive descent → builds Abstract Syntax Tree (AST)
+└─────────────┘
+    │
+    ▼
+┌───────────────┐
+│ AST Summarizer│  →  Converts constructs into readable structured summaries
+└───────────────┘
+    │
+    ▼
+┌─────────────────────┐
+│ Tree-Walk Interpreter│ →  Executes the AST recursively, produces output
+└─────────────────────┘
+    │
+    ▼
+┌──────────────────┐
+│ NLP Integration  │  →  (Optional) Refines summaries into human-like prose
+└──────────────────┘
+    │
+    ▼
+┌──────────┐
+│ GUI/IDE  │  →  Tkinter: editor + console + AST view + explanations
+└──────────┘
+```
+
+---
+
+## Supported Constructs
+
+| Construct | Details |
+|-----------|---------|
+| Variables | Declarations, assignments, arithmetic & logical ops |
+| Loops | `for`, `while` with full iteration |
+| Conditionals | `if`, `elif`, `else` branching |
+| Functions | Return statements, built-ins (`len`, `range`) |
+| Lists | Index-based access and list operations |
+
+**Example input:**
+```python
 x = 0
 while x < 5:
     print(x)
     x = x + 1
 ```
-![alt text](image.png)
 
-## Problems Faced
+---
 
-- Lack of suitable dataset for NLP training:
-    - Initially, no proper code-summary dataset was available.
-    -  Had to create a custom template-based dataset and filter it according to the interpreter’s capabilities.
-    - Even after training, the NLP output lacked accuracy, so the system shifted toward AST-based summarization.
-    
-##  Future Prospects
-- Advanced NLP Integration: Use pre-trained models like CodeT5 or LLaMA for more natural explanations.
-- Extended Language Features: Classes, modules, and advanced Python constructs.
-- Web-Based IDE: Replace Tkinter with a modern web interface for better usability.
-- Real-Time Code Explanation: Summarize code dynamically as users type.
+## Challenges Faced
 
-## Mentors
- - Yadnyesh Patil
- - Rupak Gupta
+- No suitable NLP training dataset existed initially
+- Built a custom template-based dataset filtered to the interpreter's capabilities
+- NLP accuracy gaps led to a strategic pivot toward AST-based summarization as the primary explanation engine
 
-## Contributers
- - Mokshi Shah
+---
+
+## Future Prospects
+
+- **Advanced NLP** — integrate CodeT5 or LLaMA for richer, more natural explanations
+- **Extended Language Features** — classes, modules, and advanced Python constructs
+- **Web-Based IDE** — replace Tkinter with a modern browser interface
+- **Real-Time Explanation** — summarize code dynamically as users type
+
+---
+
+## Team
+
+**Mentors**
+- Yadnyesh Patil
+- Rupak Gupta
+
+**Contributors**
+- Mokshi Shah
