@@ -1,4 +1,4 @@
-from parser import ExprVisitor, StmtVisitor
+from codesage.parser import ExprVisitor, StmtVisitor
 
 
 class Resolver(ExprVisitor, StmtVisitor):

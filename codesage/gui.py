@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import scrolledtext, font
-from scanner import Scanner
-from parser import Parser, ASTSummarizer
-from interpreter import CODESAGE, Interpreter
-from resolver import Resolver
+from codesage.scanner import Scanner
+from codesage.parser import Parser, ASTSummarizer
+from codesage.interpreter import CODESAGE, Interpreter
+from codesage.resolver import Resolver
 from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
 

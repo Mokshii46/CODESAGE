@@ -1,5 +1,5 @@
 from typing import List
-from scanner import Token, TokenType
+from codesage.scanner import Token, TokenType
 
 class ParseError(Exception):
     pass

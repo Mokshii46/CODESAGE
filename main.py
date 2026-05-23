@@ -1,33 +1,33 @@
-# main.py
 import sys
 import pickle
 import torch
-from scanner import Scanner
-from parser import Parser, ASTTreePrinter, ASTPathExtractor,ASTSummarizer
-from prepare_embeddings import run_embedding_pipeline
-from decoder import Decoder, SummaryVocab
-from interpreter import CODESAGE, Interpreter
-from resolver import Resolver
+from codesage.scanner import Scanner
+from codesage.parser import Parser, ASTTreePrinter, ASTPathExtractor, ASTSummarizer
+from nlp.prepare_embeddings import run_embedding_pipeline
+from nlp.decoder import Decoder, SummaryVocab
+from codesage.interpreter import CODESAGE, Interpreter
+from codesage.resolver import Resolver
 from openai import OpenAI
 # import os
-# import os
-from openai import OpenAI
+from dotenv import load_dotenv
 
-client = OpenAI(api_key="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")
+load_dotenv()
 
-def gpt_line_by_line_summary(code: str) -> str:
-    messages = [
-        {"role": "system", "content": "You are CodeSage, a helpful assistant that explains Python code line by line.But make sure it is short"},
-        {"role": "user", "content": f"Explain this Python code line by line, including the type of statement:\n\n{code}"}
-    ]
+# client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+# def gpt_line_by_line_summary(code: str) -> str:
+#     messages = [
+#         {"role": "system", "content": "You are CodeSage, a helpful assistant that explains Python code line by line.But make sure it is short"},
+#         {"role": "user", "content": f"Explain this Python code line by line, including the type of statement:\n\n{code}"}
+#     ]
     
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        temperature=0.2
-    )
+#     response = client.chat.completions.create(
+#         model="gpt-4o-mini",
+#         messages=messages,
+#         temperature=0.2
+#     )
     
-    return response.choices[0].message.content.strip()
+#     return response.choices[0].message.content.strip()
 
 # -----------------------------
 # 1. Load trained decoder and vocabulary
@@ -129,13 +129,13 @@ def main():
     # summary = " ".join(tokens_out[1:])  # Exclude <SOS>
     # print("\nGenerated Summary:", summary)
 
-    summary = gpt_line_by_line_summary(source_code)
-    print("\nGenerated Summary:\n")
-    print(summary)
-    # summarizer = ASTSummarizer()
-    # printer_output = [summarizer.print(stmt) for stmt in statements]
-    # for line in summarizer.summary_lines:
-    #     print(line)
+    # summary = gpt_line_by_line_summary(source_code)
+    # print("\nGenerated Summary:\n")
+    # print(summary)
+    summarizer = ASTSummarizer()
+    printer_output = [summarizer.print(stmt) for stmt in statements]
+    for line in summarizer.summary_lines:
+        print(line)
 
 
     # -----------------------------

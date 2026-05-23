@@ -1,6 +1,6 @@
 import sys
-from parser import Expr, ExprVisitor, StmtVisitor
-from scanner import TokenType
+from codesage.parser import Expr, ExprVisitor, StmtVisitor
+from codesage.scanner import TokenType
 from abc import ABC, abstractmethod
 
 
